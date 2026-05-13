@@ -4,10 +4,10 @@
       "id": 1,
       "title": "Scaffold driver solution and project",
       "description": "Create the .NET solution and project files for the driver from scratch, following the CreateDCDriverProject.linq template and DataContextDrivers8.docx guidance.\n\nWhat to do:\n- Create `src/LinqPad.Databricks.Driver/` as a .NET class library (.csproj) targeting `net8.0-windows`.\n- Create `tests/LinqPad.Databricks.Tests/` as an xUnit test project targeting `net8.0`.\n- Create a root `LinqPad.Databricks.sln` referencing both projects.\n- Add NuGet reference `LINQPad.Reference` (latest stable) to the driver project.\n- Add `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, and `<Platforms>x64;x86</Platforms>` to the driver .csproj.\n- Add a post-build event that copies build output to `%LOCALAPPDATA%\\LINQPad\\Drivers\\DataContext\\NetCore\\DatabricksDriver` (Windows dev-loop shortcut); guard with a condition so it is a no-op on non-Windows CI.\n- Stub out the main driver class `DatabricksDriver : DynamicDataContextDriver` in `DatabricksDriver.cs` with `Name` and `Author` overrides returning non-empty strings, and `GetConnectionDescription` returning the workspace URL from `cxInfo.DriverData`.\n- Verify: `dotnet build` succeeds with no errors on `net8.0-windows`.",
-      "status": "inProgress",
-      "devIterations": 2,
+      "status": "inQa",
+      "devIterations": 3,
       "createdAt": "2026-05-13T20:09:13.695Z",
-      "updatedAt": "2026-05-13T20:47:33.673Z"
+      "updatedAt": "2026-05-13T20:55:40.483Z"
     },
     {
       "id": 2,
@@ -83,7 +83,7 @@
     }
   ],
   "currentTaskNum": 1,
-  "totalLLMCalls": 5,
+  "totalLLMCalls": 6,
   "maxLLMCalls": 500,
   "nextTask": {
     "taskId": 1,
@@ -95,5 +95,5 @@
     "content": "Running dotnet to scaffold solution and projects, add LINQPad.Reference, add driver stub, and build to verify. This creates the driver and test projects, updates the .sln, and commits changes. Running dotnet build verifies compilation.\n\nCalling tools: report_intent + a bash script that performs the scaffold, edits the csproj, creates DatabricksDriver.cs, commits, and builds.\n\n",
     "updatedAt": "2026-05-13T20:47:33.669Z"
   },
-  "lastUpdated": "2026-05-13T20:47:33.673Z"
+  "lastUpdated": "2026-05-13T20:55:40.483Z"
 }

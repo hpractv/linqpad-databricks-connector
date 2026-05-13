@@ -16,22 +16,20 @@ namespace LinqPad.Databricks.Driver
             try
             {
                 var url = cxInfo?.DriverData?.Element("WorkspaceUrl")?.Value;
-                return string.IsNullOrWhiteSpace(url) ? "Databricks workspace (unspecified)" : $"Databricks workspace: {url}";
+                if (string.IsNullOrWhiteSpace(url))
+                    return "Azure Databricks (workspace not specified)";
+                return $"Azure Databricks ({url})";
             }
             catch
             {
-                return "Databricks workspace (invalid DriverData)";
+                return "Azure Databricks (invalid connection data)";
             }
         }
 
-        public override List<ExplorerItem> GetSchemaAndBuildAssembly(
-            IConnectionInfo cxInfo,
-            AssemblyName assemblyToBuild,
-            ref string nameSpace,
-            ref string typeName)
+        public override List<ExplorerItem> GetSchemaAndBuildAssembly(IConnectionInfo cxInfo, AssemblyName assemblyToBuild, ref string nameSpace, ref string typeName)
         {
-            nameSpace = "LinqPad.Databricks.Generated";
-            typeName = "DatabricksDataContext";
+            nameSpace ??= "LinqPad.Databricks";
+            typeName ??= "DatabricksDataContext";
             return new List<ExplorerItem>();
         }
     }
