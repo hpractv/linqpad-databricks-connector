@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Xml.Linq;
 using LINQPad.Extensibility.DataContext;
 
 namespace LinqPad.Databricks.Driver
@@ -9,20 +8,18 @@ namespace LinqPad.Databricks.Driver
     public class DatabricksDriver : DynamicDataContextDriver
     {
         public override string Name => "Databricks LINQPad Driver";
-        public override string Author => "Your Name";
+        public override string Author => "hpractv";
 
         public override string GetConnectionDescription(IConnectionInfo cxInfo)
         {
             try
             {
-                var data = cxInfo.DriverData;
-                if (data == null) return "Databricks (no workspace URL)";
-                var urlEl = data.Element("WorkspaceUrl");
-                return urlEl != null && !string.IsNullOrWhiteSpace(urlEl.Value) ? urlEl.Value : "Databricks (no workspace URL)";
+                var url = cxInfo?.DriverData?.Element("WorkspaceUrl")?.Value;
+                return string.IsNullOrEmpty(url) ? "Databricks workspace (not set)" : url;
             }
             catch
             {
-                return "Databricks";
+                return "Databricks workspace";
             }
         }
 
@@ -32,8 +29,7 @@ namespace LinqPad.Databricks.Driver
             ref string nameSpace,
             ref string typeName)
         {
-            // Minimal stub: return empty schema and rely on template helpers for real implementation
-            nameSpace = "LinqPad.Databricks.Generated";
+            nameSpace = "LinqPad.Databricks.Runtime";
             typeName = "DatabricksDataContext";
             return new List<ExplorerItem>();
         }
