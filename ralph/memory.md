@@ -60,3 +60,4 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - `InternalsVisibleTo("LinqPad.Databricks.Tests")` in `AssemblyInfo.cs` exposes internal 3-arg `DatabricksHttpClient` constructor to tests.
 - Moq: use `MockBehavior.Loose` (default), not `Strict`, to avoid issues with `Dispose(bool)` calls on `HttpMessageHandler` mock.
 - URL validation regex: `^https://[a-zA-Z0-9\-\.]+(\.azuredatabricks\.net|\.databricks\.azure\.cn)/?$` - must allow dots in subdomain (e.g., `adb-1234.1.azuredatabricks.net`).
+- Created solution and projects for Databricks LINQPad driver manually (csproj files written directly).

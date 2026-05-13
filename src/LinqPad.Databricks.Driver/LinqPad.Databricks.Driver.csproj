@@ -1,38 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Platforms>x64;x86</Platforms>
-    <AssemblyName>LinqPad.Databricks.Driver</AssemblyName>
-    <RootNamespace>LinqPad.Databricks.Driver</RootNamespace>
-    <!-- NuGet packaging -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>LinqPad.Databricks.Driver</PackageId>
-    <Version>0.1.0</Version>
-    <Authors>Databricks LINQPad Driver Contributors</Authors>
-    <Description>LINQPad 8+ Data Context Driver for Azure Databricks (Unity Catalog + SQL Warehouse)</Description>
-    <PackageTags>linqpaddriver;databricks;azure</PackageTags>
   </PropertyGroup>
-
+  <ItemGroup>
+    <!-- PackageReference LINQPad.Reference will be added by dotnet add package -->
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="LINQPad.Reference" Version="1.3.1" />
   </ItemGroup>
-
-  <!-- Exclude XAML file from build (WPF is provided by LINQPad host at runtime) -->
-  <ItemGroup>
-    <None Include="ConnectionDialog.xaml" />
-  </ItemGroup>
-
-  <!-- Dev-loop: copy output to LINQPad driver folder on Windows -->
-  <Target Name="CopyToLINQPadDrivers" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+  <Target Name="CopyToLINQPad" AfterTargets="PostBuild" Condition="'$(OS)' == 'Windows_NT'">
     <PropertyGroup>
-      <LINQPadDriverDir>$(LOCALAPPDATA)\LINQPad\Drivers\DataContext\NetCore\DatabricksDriver</LINQPadDriverDir>
+      <LINQPadDriversDir>$(LOCALAPPDATA)\\LINQPad\\Drivers\\DataContext\\NetCore\\DatabricksDriver</LINQPadDriversDir>
     </PropertyGroup>
-    <MakeDir Directories="$(LINQPadDriverDir)" />
-    <Copy SourceFiles="@(ReferenceCopyLocalPaths)" DestinationFolder="$(LINQPadDriverDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(LINQPadDriverDir)" SkipUnchangedFiles="true" />
+    <MakeDir Directories="$(LINQPadDriversDir)" Condition="!Exists('$(LINQPadDriversDir)')" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(LINQPadDriversDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).pdb" DestinationFolder="$(LINQPadDriversDir)" SkipUnchangedFiles="true" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).deps.json" DestinationFolder="$(LINQPadDriversDir)" SkipUnchangedFiles="true" Condition="Exists('$(OutputPath)$(AssemblyName).deps.json')" />
   </Target>
-
 </Project>

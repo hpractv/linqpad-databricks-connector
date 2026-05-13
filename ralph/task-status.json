@@ -1,17 +1,99 @@
 {
-  "tasks": [],
-  "currentTaskNum": 0,
-  "totalLLMCalls": 0,
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Scaffold driver solution and project",
+      "description": "Create the .NET solution and project files for the driver from scratch, following the CreateDCDriverProject.linq template and DataContextDrivers8.docx guidance.\n\nWhat to do:\n- Create `src/LinqPad.Databricks.Driver/` as a .NET class library (.csproj) targeting `net8.0-windows`.\n- Create `tests/LinqPad.Databricks.Tests/` as an xUnit test project targeting `net8.0`.\n- Create a root `LinqPad.Databricks.sln` referencing both projects.\n- Add NuGet reference `LINQPad.Reference` (latest stable) to the driver project.\n- Add `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, and `<Platforms>x64;x86</Platforms>` to the driver .csproj.\n- Add a post-build event that copies build output to `%LOCALAPPDATA%\\LINQPad\\Drivers\\DataContext\\NetCore\\DatabricksDriver` (Windows dev-loop shortcut); guard with a condition so it is a no-op on non-Windows CI.\n- Stub out the main driver class `DatabricksDriver : DynamicDataContextDriver` in `DatabricksDriver.cs` with `Name` and `Author` overrides returning non-empty strings, and `GetConnectionDescription` returning the workspace URL from `cxInfo.DriverData`.\n- Verify: `dotnet build` succeeds with no errors on `net8.0-windows`.",
+      "status": "inProgress",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.701Z"
+    },
+    {
+      "id": 2,
+      "title": "Implement Databricks REST base client",
+      "description": "Create a thin HTTP base client used by both the Unity Catalog and Statement Execution clients.\n\nWhat to do:\n- In `src/LinqPad.Databricks.Driver/Client/` (or optional `src/LinqPad.Databricks.Client/` if separating), create `DatabricksHttpClient.cs`.\n- Constructor accepts `string workspaceUrl` (normalized, trailing slash stripped) and `string personalAccessToken`.\n- Internally wraps `HttpClient` with `BaseAddress` set and `Authorization: Bearer <pat>` default request header.\n- Provide `GetAsync<T>(string relativeUrl, CancellationToken ct)` and `PostAsync<T>(string relativeUrl, object body, CancellationToken ct)` helpers that:\n  - Serialize/deserialize JSON using `System.Text.Json` with `JsonSerializerOptions { PropertyNameCaseInsensitive = true }`.\n  - On non-2xx responses, parse the Databricks error envelope `{ \"error_code\": ..., \"message\": ... }` and throw a typed `DatabricksApiException(string errorCode, string message, HttpStatusCode status)`.\n- Add `DatabricksApiException` class.\n- Validate workspace URL format in the constructor (must start with `https://` and match Azure pattern `adb-<id>.<region>.azuredatabricks.net` or generic `*.azuredatabricks.net`); throw `ArgumentException` with a clear message otherwise.\n\nTesting:\n- Unit test using `HttpMessageHandler` mock: success deserialization, error envelope parsing, URL validation rejection.\n- Acceptance: all unit tests pass with `dotnet test`.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 3,
+      "title": "Implement Unity Catalog REST client",
+      "description": "Build `UnityCatalogClient` on top of `DatabricksHttpClient` to enumerate catalogs, schemas, and tables/views.\n\nWhat to do:\n- Create `UnityCatalogClient.cs` wrapping `DatabricksHttpClient`.\n- Implement `ListCatalogsAsync(CancellationToken ct)` → `IReadOnlyList<CatalogInfo>`: `GET /api/2.1/unity-catalog/catalogs`; follow `next_page_token` pagination in a loop until token is null/empty.\n- Implement `ListSchemasAsync(string catalogName, CancellationToken ct)` → `IReadOnlyList<SchemaInfo>`: `GET /api/2.1/unity-catalog/schemas?catalog_name=<name>`; paginate.\n- Implement `ListTablesAsync(string catalogName, string schemaName, CancellationToken ct)` → `IReadOnlyList<TableInfo>`: `GET /api/2.1/unity-catalog/tables?catalog_name=<c>&schema_name=<s>`; paginate.\n- Define DTOs: `CatalogInfo { string Name, string? Comment }`, `SchemaInfo { string Name, string CatalogName, string? Comment }`, `TableInfo { string Name, string SchemaName, string CatalogName, string TableType, IReadOnlyList<ColumnInfo> Columns }`, `ColumnInfo { string Name, string TypeText, int Position }`.\n- `TableType` values include `MANAGED`, `EXTERNAL`, `VIEW` — expose a helper `bool IsView => TableType == \"VIEW\"`.\n\nTesting:\n- Unit tests with mocked HTTP for paginated catalog list (two pages), schema list, table list with both table and view types.\n- Acceptance: all tests pass.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 4,
+      "title": "Implement Statement Execution API client",
+      "description": "Build `StatementExecutionClient` that submits SQL to a Databricks SQL warehouse and materializes results.\n\nWhat to do:\n- Create `StatementExecutionClient.cs` wrapping `DatabricksHttpClient`.\n- Implement `ExecuteAsync(string warehouseId, string sql, CancellationToken ct)` → `StatementResult`:\n  1. `POST /api/2.0/sql/statements` body: `{ warehouse_id, statement, wait_timeout: \"30s\", on_wait_timeout: \"CANCEL\", disposition: \"INLINE\", format: \"JSON_ARRAY\" }`.\n  2. If response `status.state` is `PENDING` or `RUNNING`, poll `GET /api/2.0/sql/statements/{statement_id}` with exponential back-off (start 500 ms, max 5 s) until state is terminal (`SUCCEEDED`, `FAILED`, `CANCELED`, `CLOSED`).\n  3. On `FAILED`/`CANCELED`: throw `DatabricksApiException` with `error.message` and `error.error_code`.\n  4. On `SUCCEEDED`: collect column schema from `manifest.schema.columns` and rows from `result.data_array`; if `result.next_chunk_index` is present, fetch additional chunks via `GET /api/2.0/sql/statements/{id}/result/chunks/{index}` until exhausted.\n- Define `StatementResult { IReadOnlyList<ColumnSchema> Columns, IReadOnlyList<IReadOnlyList<string?>> Rows }` and `ColumnSchema { string Name, string TypeName }`.\n- Expose a helper `ToDataTable(StatementResult result)` that converts to `System.Data.DataTable`.\n\nTesting:\n- Unit tests: immediate SUCCEEDED, polling PENDING→SUCCEEDED, multi-chunk result, FAILED error propagation.\n- Acceptance: all tests pass.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 5,
+      "title": "Implement ADO.NET facade over Statement Execution",
+      "description": "Create minimal `IDbConnection` / `IDbCommand` / `IDataReader` wrappers so LINQPad SQL mode works through the Statement Execution API without a traditional JDBC/ODBC driver.\n\nWhat to do:\n- Create `DatabricksConnection : DbConnection` storing `workspaceUrl`, `pat`, `warehouseId`; `Open()` is a no-op (REST is stateless); `ConnectionString` setter parses those three values from a semicolon-delimited string (key=value format).\n- Create `DatabricksCommand : DbCommand` delegating to `StatementExecutionClient.ExecuteAsync`; implement `ExecuteReader()` → `DatabricksDataReader`; implement `ExecuteNonQuery()` (runs statement, ignores rows); `ExecuteScalar()` returns first row first col.\n- Create `DatabricksDataReader : DbDataReader` backed by `StatementResult`; implement `Read()`, `GetValue(int i)`, `FieldCount`, `GetName(int i)`, `GetDataTypeName(int i)`, `GetOrdinal(string name)`, and all required abstract members (stub with `throw new NotSupportedException()` where not meaningful).\n- Create `DatabricksProviderFactory : DbProviderFactory` returning the above types from `CreateConnection()`, `CreateCommand()`.\n- Override `DatabricksDriver.GetIDbConnection(IConnectionInfo cxInfo)` to construct and return a `DatabricksConnection` populated from `cxInfo.DriverData`.\n- Override `DatabricksDriver.GetProviderFactory(IConnectionInfo cxInfo)` to return `DatabricksProviderFactory.Instance`.\n\nTesting:\n- Unit test `DatabricksDataReader` using a known `StatementResult`; verify column count, row enumeration, value retrieval.\n- Acceptance: tests pass; manual LINQPad SQL query returns rows (verified in later integration step).",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 6,
+      "title": "Implement Schema Explorer via Unity Catalog",
+      "description": "Override `GetSchemaAndBuildAssembly` on the driver to populate the LINQPad Schema Explorer tree and emit the typed data context assembly.\n\nWhat to do:\n- Override `GetSchemaAndBuildAssembly(IConnectionInfo cxInfo, AssemblyName assemblyToBuild, ref string nameSpace, ref string typeName)`.\n- Use `UnityCatalogClient` (constructed from `cxInfo.DriverData`) to enumerate catalogs → schemas → tables+views synchronously (`.GetAwaiter().GetResult()` or use `Task.Run(...).GetAwaiter().GetResult()` to avoid deadlocks).\n- Build `ExplorerItem` tree:\n  - Catalog: `ExplorerItemKind.Category`, `ExplorerIcon.Schema`.\n  - Schema: `ExplorerItemKind.Category`, `ExplorerIcon.Schema`.\n  - Table: `ExplorerItemKind.Table`, `ExplorerIcon.Table`.\n  - View: `ExplorerItemKind.Table`, `ExplorerIcon.View`.\n  - Column children: `ExplorerItemKind.Column`, `ExplorerIcon.Column`; `Text` = `\"<name> (<typeText>)\"`.\n- Emit C# source for the typed context: for each table generate a `IQueryable<DynamicRow>` property (or use `DataTable`-based approach — simplest viable path); compile with `CompileSource(source, ref assemblyToBuild)` (base class helper).\n- Override `GetLastSchemaUpdate(IConnectionInfo cxInfo)` to return `DateTime.UtcNow` as a placeholder (triggers refresh on each open).\n- Handle `DatabricksApiException` by returning an empty list and surfacing the message via `ExplorerItem` error node.\n\nTesting:\n- Unit test: mock `UnityCatalogClient`; assert returned `ExplorerItem` list has correct depth and kinds.\n- Acceptance: Schema Explorer in LINQPad shows catalog/schema/table tree for a live workspace.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 7,
+      "title": "Implement connection dialog UI",
+      "description": "Implement `ShowConnectionDialog` with a WPF dialog for workspace URL, PAT, warehouse ID, and optional defaults.\n\nWhat to do:\n- Create `ConnectionDialog.xaml` / `ConnectionDialog.xaml.cs` (WPF `Window`) in the driver project.\n- Fields: Workspace URL (TextBox, required), Personal Access Token (PasswordBox, required), Warehouse ID (TextBox, required), Default Catalog (TextBox, optional), Default Schema (TextBox, optional).\n- On load, populate fields from `cxInfo.DriverData` XElement children (`WorkspaceUrl`, `WarehouseId`, `DefaultCatalog`, `DefaultSchema`) and decrypt PAT via `cxInfo.Decrypt(cxInfo.DriverData.Element(\"Pat\")?.Value)`.\n- On OK, validate non-empty required fields; save to `cxInfo.DriverData` and encrypt PAT via `cxInfo.Encrypt(pat)`; return `true`.\n- On Cancel, return `false` without modifying `cxInfo.DriverData`.\n- Add a **Test Connection** button: instantiate `UnityCatalogClient` and call `ListCatalogsAsync` with a 10 s timeout; show a success message (first catalog name) or the `DatabricksApiException` message in a `MessageBox`.\n- Override `DatabricksDriver.ShowConnectionDialog` to instantiate and show the dialog; return its result.\n- Override `DatabricksDriver.GetConnectionDescription` to return `\"<workspaceUrl> / <warehouseId>\"`.\n\nTesting:\n- Manual: open LINQPad, add new connection, fill dialog, click Test Connection with valid/invalid credentials, confirm OK saves and Cancel discards.\n- Acceptance: connection persists across LINQPad restart with PAT encrypted in `cxInfo.DriverData`.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 8,
+      "title": "Add unit tests with mocked HTTP",
+      "description": "Flesh out the test project with comprehensive unit tests covering all HTTP client and driver logic.\n\nWhat to do:\n- Use `xunit` + `Moq` (or custom `HttpMessageHandler` subclass) for HTTP mocking; add these packages to the test .csproj.\n- `DatabricksHttpClientTests`: success GET/POST deserialization, error envelope parsing (400/500), URL format validation.\n- `UnityCatalogClientTests`: single-page catalog list, paginated catalog list (two pages), schema list, table list with view type.\n- `StatementExecutionClientTests`: immediate SUCCEEDED result, PENDING→SUCCEEDED polling, multi-chunk result assembly, FAILED throws `DatabricksApiException`.\n- `DatabricksDataReaderTests`: verify column count, `Read()` iteration, `GetValue`, `GetName`, `GetOrdinal`.\n- `SchemaExplorerTests`: mock UC client, assert `ExplorerItem` tree structure and kinds.\n- All tests discoverable by `dotnet test` from repo root.\n\nAcceptance: `dotnet test` runs green with at least the above test categories covered.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    },
+    {
+      "id": 9,
+      "title": "Package driver as .LPX6 and NuGet",
+      "description": "Create build/publish scripts to produce the `.LPX6` file-based package and an optional NuGet package.\n\nWhat to do:\n- Add a `publish.ps1` (or `publish.sh` for cross-platform) script that:\n  1. Runs `dotnet publish src/LinqPad.Databricks.Driver -c Release -r win-x64 --self-contained false -o dist/publish`.\n  2. Zips the contents of `dist/publish` and renames to `dist/LinqPad.Databricks.Driver.LPX6`.\n- For NuGet: add `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>` to the driver .csproj; set `<PackageId>LinqPad.Databricks.Driver</PackageId>`, `<PackageTags>linqpaddriver</PackageTags>`, `<Version>0.1.0</Version>`. Ensure `lib/net8.0/` (no `-windows` suffix) in the resulting `.nupkg` so the package is not invisible on macOS feeds.\n- Update (or create) `README.md` at repo root with installation instructions for both methods: (a) drag-and-drop `.LPX6` into LINQPad, (b) NuGet feed install; include required LINQPad version (8+) and prerequisites.\n- Verify the `.LPX6` file can be opened by LINQPad's \"Browse for driver\" dialog and that `DatabricksDriver` appears in the driver list.\n\nAcceptance: `dist/LinqPad.Databricks.Driver.LPX6` is generated by the script; `dotnet pack` produces a `.nupkg` with `linqpaddriver` tag.",
+      "status": "backlog",
+      "devIterations": 0,
+      "createdAt": "2026-05-13T20:09:13.695Z",
+      "updatedAt": "2026-05-13T20:09:13.695Z"
+    }
+  ],
+  "currentTaskNum": 1,
+  "totalLLMCalls": 1,
   "maxLLMCalls": 500,
   "nextTask": {
-    "taskId": null,
-    "content": "",
-    "updatedAt": "2026-05-13T19:46:15.309Z"
+    "taskId": 1,
+    "content": "## Task: Scaffold driver solution and project\n\nCreate the .NET solution and project files for the driver from scratch, following the CreateDCDriverProject.linq template and DataContextDrivers8.docx guidance.\n\nWhat to do:\n- Create `src/LinqPad.Databricks.Driver/` as a .NET class library (.csproj) targeting `net8.0-windows`.\n- Create `tests/LinqPad.Databricks.Tests/` as an xUnit test project targeting `net8.0`.\n- Create a root `LinqPad.Databricks.sln` referencing both projects.\n- Add NuGet reference `LINQPad.Reference` (latest stable) to the driver project.\n- Add `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, and `<Platforms>x64;x86</Platforms>` to the driver .csproj.\n- Add a post-build event that copies build output to `%LOCALAPPDATA%\\LINQPad\\Drivers\\DataContext\\NetCore\\DatabricksDriver` (Windows dev-loop shortcut); guard with a condition so it is a no-op on non-Windows CI.\n- Stub out the main driver class `DatabricksDriver : DynamicDataContextDriver` in `DatabricksDriver.cs` with `Name` and `Author` overrides returning non-empty strings, and `GetConnectionDescription` returning the workspace URL from `cxInfo.DriverData`.\n- Verify: `dotnet build` succeeds with no errors on `net8.0-windows`.",
+    "updatedAt": "2026-05-13T20:09:13.704Z"
   },
   "feedback": {
-    "taskId": null,
+    "taskId": 1,
     "content": "",
-    "updatedAt": "2026-05-13T19:46:15.309Z"
+    "updatedAt": "2026-05-13T20:09:13.707Z"
   },
-  "lastUpdated": "2026-05-13T19:46:15.309Z"
+  "lastUpdated": "2026-05-13T20:09:13.707Z"
 }
