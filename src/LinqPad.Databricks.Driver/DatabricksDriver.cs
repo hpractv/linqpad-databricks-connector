@@ -16,13 +16,13 @@ namespace LinqPad.Databricks.Driver
             try
             {
                 var data = cxInfo.DriverData;
-                if (data == null) return base.GetConnectionDescription(cxInfo);
+                if (data == null) return "Databricks (no workspace URL)";
                 var urlEl = data.Element("WorkspaceUrl");
-                return urlEl != null ? urlEl.Value : base.GetConnectionDescription(cxInfo);
+                return urlEl != null && !string.IsNullOrWhiteSpace(urlEl.Value) ? urlEl.Value : "Databricks (no workspace URL)";
             }
             catch
             {
-                return base.GetConnectionDescription(cxInfo);
+                return "Databricks";
             }
         }
 
