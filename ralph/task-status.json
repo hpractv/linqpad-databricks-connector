@@ -31,10 +31,10 @@
       "id": 10,
       "title": "Add column details to Schema Explorer",
       "description": "Currently tables and views in the Schema Explorer show no column children. Add column-level ExplorerItems under each table/view so users can see field names and types without running a query.\n\n**Implementation:**\n1. Add `ColumnInfo` model in `Catalog/ColumnInfo.cs` with `name` (string), `type_name` (string), `comment` (string?), `nullable` (bool?) JSON-deserialized fields.\n2. Extend `TableInfo` model with a `Columns` list property (populated by the detail endpoint, not the list endpoint).\n3. Add `GetTableAsync(string catalogName, string schemaName, string tableName, CancellationToken ct)` method to `UnityCatalogClient` that calls `GET /api/2.1/unity-catalog/tables/{catalog_name}.{schema_name}.{table_name}` and returns a `TableInfo` with columns populated.\n4. In `DatabricksDriver.GetSchemaAndBuildAssembly`, after adding each `tblItem`, call `GetTableAsync` to fetch columns. For each column, add a child `ExplorerItem` with `ExplorerItemKind.FieldOrProperty`, `ExplorerIcon.Blank`, and the column type appended to the name (e.g. `\"id (LONG)\"`). Wrap in try/catch to avoid failing the whole tree if one table detail call fails.\n5. Performance note: fetching columns for every table may be slow on large workspaces. Tolerate this for MVP; a future task can add lazy/on-demand loading.\n\n**Tests:** Add `UnityCatalogClientTests` cases for `GetTableAsync` using the `QueuedFakeHandler` pattern. Verify columns are deserialized and returned correctly. Verify `DatabricksDriver` (or integration smoke) that tblItem children are populated.\n\n**Acceptance criteria:** A table ExplorerItem has child items for each column with name and type. Test for `GetTableAsync` passes with mocked HTTP.",
-      "status": "inProgress",
-      "devIterations": 7,
+      "status": "done",
+      "devIterations": 18,
       "createdAt": "2026-05-13T22:21:47.005Z",
-      "updatedAt": "2026-05-13T23:00:52.951Z"
+      "updatedAt": "2026-05-13T23:30:51.351Z"
     },
     {
       "id": 11,
@@ -56,7 +56,7 @@
     }
   ],
   "currentTaskNum": 10,
-  "totalLLMCalls": 58,
+  "totalLLMCalls": 80,
   "maxLLMCalls": 500,
   "nextTask": {
     "taskId": 10,
@@ -65,8 +65,8 @@
   },
   "feedback": {
     "taskId": 10,
-    "content": "Running quick repository search to find the driver, client, models, and tests to update. This locates files to edit for adding ColumnInfo, TableInfo.Columns, UnityCatalogClient.GetTableAsync, and driver schema code. Also finds test locations. I'll open the matched files next.\n\nUpdating DatabricksDriver: change column ExplorerItem kind from Property to FieldOrProperty so LINQPad shows them as fields/properties in the Schema Explorer. Applying a targeted edit to DatabricksDriver.cs.\n\n",
-    "updatedAt": "2026-05-13T23:00:52.950Z"
+    "content": "Reading the repository to locate UnityCatalogClient, TableInfo, DatabricksDriver, and existing tests so changes can be applied precisely. Running a glob to find C# source files and calling report_intent in parallel per workflow requirements.\n\nInspecting ColumnInfo, TableInfo, UnityCatalogClient, DatabricksDriver, and UnityCatalogClientTests to determine required edits and where to add GetTableAsync and column population. Running parallel file reads and logging intent \"Updating code\".\n\nRunning the test suite to verify UnityCatalogClient.GetTableAsync and the schema explorer column population. Running dotnet test (build + tests).\n\n<status>verified</status>\n\n",
+    "updatedAt": "2026-05-13T23:30:51.350Z"
   },
-  "lastUpdated": "2026-05-13T23:00:52.951Z"
+  "lastUpdated": "2026-05-13T23:30:51.351Z"
 }

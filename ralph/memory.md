@@ -106,3 +106,5 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Compatibility note: code uses Enum.TryParse to detect and prefer "FieldOrProperty" when present, falling back to "Property" to support older LINQPad.Reference versions.
 - Added ColumnInfo model (ColumnInfo.cs) with properties Name/TypeName/Comment/Nullable/Position; UnityCatalogClient.GetTableAsync returns TableInfo.Columns and DatabricksDriver populates ExplorerItem children (columns shown as 'name (TYPE)').
 - Verified unit tests for GetTableAsync and schema explorer: all tests pass (38 total).
+- Note: UnityCatalogClientTests validates full-name URL encoding and columns deserialization; DatabricksDriver builds ExplorerItem children labeled "name (TYPE)" and skips detail errors to remain resilient on large workspaces.
+- Implemented column-level ExplorerItems: added Catalog/ColumnInfo.cs and TableInfo.Columns; UnityCatalogClient.GetTableAsync fetches table details and DatabricksDriver populates column ExplorerItems. Unit tests added/updated; dotnet test passed (38 tests).
