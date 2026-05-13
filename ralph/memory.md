@@ -66,3 +66,4 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Discovery: Building a library targeting `net8.0-windows` succeeded on Linux-hosted .NET SDK 10.0.105 when the project does not require WPF/WinForms.
 - Created scaffold for LinqPad.Databricks driver (net8.0-windows) and tests (net8.0).
 - Scaffolded driver and test projects using dotnet new on Wed May 13 20:48:26 UTC 2026
+- Created scaffold for Databricks LINQPad driver on 2026-05-13T15:12:03-06:00
