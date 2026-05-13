@@ -76,4 +76,6 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - No HTTP client, UC client, Statement Execution client, or ADO facade code exists yet as of 2026-05-13.
 - Implemented DatabricksHttpClient, DatabricksApiException, and Models/PagedResponse under src/LinqPad.Databricks.Driver; added internal constructor for handler injection and Properties/AssemblyInfo InternalsVisibleTo for tests.
 - Added unit tests (DatabricksHttpClientTests) using a DelegatingHandler fake to validate JSON deserialization and error mapping; test and driver projects temporarily set to net10.0 in this environment to run tests.
+- DatabricksHttpClient features: Workspace URL is validated by regex, Authorization header set on HttpClient default headers, GetAsync/PostAsync generic JSON helpers, non-2xx responses map to DatabricksApiException with parsed 'message'/'error' and 'error_code'.
+- Tests verify successful deserialization into PagedResponse<T> and that 4xx responses throw DatabricksApiException with proper ErrorCode and StatusCode.
 
