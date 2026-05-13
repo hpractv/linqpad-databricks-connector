@@ -356,9 +356,13 @@ namespace LinqPad.Databricks.Driver
                                                     var colLabel = string.IsNullOrEmpty(col.TypeName)
                                                         ? col.Name
                                                         : $"{col.Name} ({col.TypeName})";
+                                                    // Use FieldOrProperty when available in the LINQPad API; fallback to Property
+                                                    var colKind = Enum.TryParse<ExplorerItemKind>("FieldOrProperty", out var fk)
+                                                        ? fk
+                                                        : ExplorerItemKind.Property;
                                                     tblItem.Children.Add(new ExplorerItem(
                                                         colLabel,
-                                                        ExplorerItemKind.Property,
+                                                        colKind,
                                                         ExplorerIcon.Blank)
                                                     {
                                                         ToolTipText = col.Comment
