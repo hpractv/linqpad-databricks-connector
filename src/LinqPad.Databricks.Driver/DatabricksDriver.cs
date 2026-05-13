@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Xml.Linq;
 using LINQPad.Extensibility.DataContext;
 
 namespace LinqPad.Databricks.Driver
@@ -15,11 +16,11 @@ namespace LinqPad.Databricks.Driver
             try
             {
                 var url = cxInfo?.DriverData?.Element("WorkspaceUrl")?.Value;
-                return string.IsNullOrEmpty(url) ? "Databricks workspace (not set)" : url;
+                return string.IsNullOrWhiteSpace(url) ? "Databricks workspace (unspecified)" : $"Databricks workspace: {url}";
             }
             catch
             {
-                return "Databricks workspace";
+                return "Databricks workspace (invalid DriverData)";
             }
         }
 
@@ -29,7 +30,7 @@ namespace LinqPad.Databricks.Driver
             ref string nameSpace,
             ref string typeName)
         {
-            nameSpace = "LinqPad.Databricks.Runtime";
+            nameSpace = "LinqPad.Databricks.Generated";
             typeName = "DatabricksDataContext";
             return new List<ExplorerItem>();
         }

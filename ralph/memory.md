@@ -64,3 +64,5 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Discovery: `dotnet new sln -n` produced an invalid `LinqPad.Databricks.slnx` file in this environment; manual .sln file creation was required to reference projects.
 - Discovery: `dotnet add package LINQPad.Reference` resolved to version 1.3.1 in this environment.
 - Discovery: Building a library targeting `net8.0-windows` succeeded on Linux-hosted .NET SDK 10.0.105 when the project does not require WPF/WinForms.
+- Created scaffold for LinqPad.Databricks driver (net8.0-windows) and tests (net8.0).
+- Scaffolded driver and test projects using dotnet new on Wed May 13 20:48:26 UTC 2026
