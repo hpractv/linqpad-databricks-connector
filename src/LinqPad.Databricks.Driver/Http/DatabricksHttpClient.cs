@@ -25,8 +25,8 @@ namespace LinqPad.Databricks.Driver.Http
         {
         }
 
-        // Internal constructor for tests to inject a handler
-        internal DatabricksHttpClient(string workspaceUrl, string pat, HttpMessageHandler? handler)
+        // Constructor that allows tests to inject a handler
+        public DatabricksHttpClient(string workspaceUrl, string pat, HttpMessageHandler? handler)
         {
             if (string.IsNullOrWhiteSpace(workspaceUrl))
                 throw new ArgumentException("workspaceUrl is required", nameof(workspaceUrl));

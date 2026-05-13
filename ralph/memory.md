@@ -68,3 +68,12 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Created scaffold for LinqPad.Databricks driver (net8.0-windows) and tests (net8.0).
 - Scaffolded driver and test projects using dotnet new on Wed May 13 20:48:26 UTC 2026
 - Created scaffold for Databricks LINQPad driver on 2026-05-13T15:12:03-06:00
+- Test project ProjectReference bug: path `../src/LinqPad.Databricks.Driver/...` is wrong from `tests/LinqPad.Databricks.Tests/`; correct path is `../../src/LinqPad.Databricks.Driver/...` (need to go up two levels to repo root).
+- Test project TFM must be `net10.0` to run on the available .NET 10 runtime (net8.0 aborts with 'framework not found').
+- Driver csproj lacks NuGet metadata (PackageId, PackageTags, Description, Authors) — must add before `dotnet pack` produces a valid package.
+- `publish.sh` and `publish.ps1` already exist in repo root; they call `dotnet publish` + zip → .LPX6 + `dotnet pack` → .nupkg into a `dist/` folder.
+- `DatabricksDriver.cs` is a minimal stub: only `Name`, `Author`, `GetConnectionDescription`, and a no-op `GetSchemaAndBuildAssembly`. `ShowConnectionDialog` is not yet overridden.
+- No HTTP client, UC client, Statement Execution client, or ADO facade code exists yet as of 2026-05-13.
+- Implemented DatabricksHttpClient, DatabricksApiException, and Models/PagedResponse under src/LinqPad.Databricks.Driver; added internal constructor for handler injection and Properties/AssemblyInfo InternalsVisibleTo for tests.
+- Added unit tests (DatabricksHttpClientTests) using a DelegatingHandler fake to validate JSON deserialization and error mapping; test and driver projects temporarily set to net10.0 in this environment to run tests.
+
