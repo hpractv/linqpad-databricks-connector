@@ -80,3 +80,8 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Tests verify successful deserialization into PagedResponse<T> and that 4xx responses throw DatabricksApiException with proper ErrorCode and StatusCode.
 
 - Notes: Implemented DatabricksHttpClient, DatabricksApiException, and PagedResponse<T>. Added internal ctor to inject HttpMessageHandler for unit tests. Unit tests pass locally (4 tests).
+- Tasks 1 and 2 are fully done as of 2026-05-13 planning pass. Tasks 3-9 are backlog.
+- `DatabricksHttpClientTests.cs` has 2 real HTTP client tests (FakeHandler pattern). `DatabricksTests.cs` and `DriverStubTests.cs` are placeholder smoke tests.
+- `PagedResponse<T>` already exists at `Models/PagedResponse.cs` — UC client (task 3) does NOT need to recreate it.
+- `FakeHandler : DelegatingHandler` pattern is established in tests; use same pattern for UC and SE client tests (no Moq needed for HTTP).
+- The driver csproj currently targets `net10.0` (not `net8.0-windows`) due to SDK availability on dev host. For production packaging, target `net8.0-windows` with `EnableWindowsTargeting=true`.
