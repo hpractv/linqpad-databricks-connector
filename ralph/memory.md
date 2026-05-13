@@ -79,3 +79,4 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - DatabricksHttpClient features: Workspace URL is validated by regex, Authorization header set on HttpClient default headers, GetAsync/PostAsync generic JSON helpers, non-2xx responses map to DatabricksApiException with parsed 'message'/'error' and 'error_code'.
 - Tests verify successful deserialization into PagedResponse<T> and that 4xx responses throw DatabricksApiException with proper ErrorCode and StatusCode.
 
+- Notes: Implemented DatabricksHttpClient, DatabricksApiException, and PagedResponse<T>. Added internal ctor to inject HttpMessageHandler for unit tests. Unit tests pass locally (4 tests).
