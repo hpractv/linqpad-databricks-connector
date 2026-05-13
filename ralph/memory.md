@@ -81,7 +81,15 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 
 - Notes: Implemented DatabricksHttpClient, DatabricksApiException, and PagedResponse<T>. Added internal ctor to inject HttpMessageHandler for unit tests. Unit tests pass locally (4 tests).
 - Tasks 1 and 2 are fully done as of 2026-05-13 planning pass. Tasks 3-9 are backlog.
+- Tasks 3-9 all implemented as of 2026-05-13 implementation pass. All 21 tests pass.
 - `DatabricksHttpClientTests.cs` has 2 real HTTP client tests (FakeHandler pattern). `DatabricksTests.cs` and `DriverStubTests.cs` are placeholder smoke tests.
 - `PagedResponse<T>` already exists at `Models/PagedResponse.cs` — UC client (task 3) does NOT need to recreate it.
 - `FakeHandler : DelegatingHandler` pattern is established in tests; use same pattern for UC and SE client tests (no Moq needed for HTTP).
 - The driver csproj currently targets `net10.0` (not `net8.0-windows`) due to SDK availability on dev host. For production packaging, target `net8.0-windows` with `EnableWindowsTargeting=true`.
+
+- The `zip` binary is not available on this dev host; `publish.sh` now uses a `python3` fallback for LPX6 creation.
+- WPF event handler wiring requires DynamicMethod to create a RoutedEventHandler-compatible delegate from Action<object,object> at runtime (Delegate.CreateDelegate does not work directly from Action).
+- `GetCoreFxReferenceAssemblies()` (no-arg) is obsolete; use `GetCoreFxReferenceAssemblies(cxInfo)` overload.
+- `AssemblyName.CodeBase` is obsolete in .NET 10; use `Path.ChangeExtension(assemblyToBuild.Name, ".dll")` as OutputPath for CompileSource.
+- ADO facade: DatabricksConnection stores StatementExecutionClient created in Open(); DatabricksCommand calls ExecuteAsync().GetAwaiter().GetResult() and wraps DataTable in CreateDataReader().
+- DbParameter/DbCommand abstract overrides emit CS8765 nullability warnings; suppress with #pragma disable CS8765 on the affected setters.
