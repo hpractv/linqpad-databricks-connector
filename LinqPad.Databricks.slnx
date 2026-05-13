@@ -1,8 +1,2 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/LinqPad.Databricks.Driver/LinqPad.Databricks.Driver.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/LinqPad.Databricks.Tests/LinqPad.Databricks.Tests.csproj" />
-  </Folder>
 </Solution>

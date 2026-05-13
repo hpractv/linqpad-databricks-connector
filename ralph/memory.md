@@ -61,3 +61,6 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Moq: use `MockBehavior.Loose` (default), not `Strict`, to avoid issues with `Dispose(bool)` calls on `HttpMessageHandler` mock.
 - URL validation regex: `^https://[a-zA-Z0-9\-\.]+(\.azuredatabricks\.net|\.databricks\.azure\.cn)/?$` - must allow dots in subdomain (e.g., `adb-1234.1.azuredatabricks.net`).
 - Created solution and projects for Databricks LINQPad driver manually (csproj files written directly).
+- Discovery: `dotnet new sln -n` produced an invalid `LinqPad.Databricks.slnx` file in this environment; manual .sln file creation was required to reference projects.
+- Discovery: `dotnet add package LINQPad.Reference` resolved to version 1.3.1 in this environment.
+- Discovery: Building a library targeting `net8.0-windows` succeeded on Linux-hosted .NET SDK 10.0.105 when the project does not require WPF/WinForms.
