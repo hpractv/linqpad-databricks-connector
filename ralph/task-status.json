@@ -32,9 +32,9 @@
       "title": "Add column details to Schema Explorer",
       "description": "Currently tables and views in the Schema Explorer show no column children. Add column-level ExplorerItems under each table/view so users can see field names and types without running a query.\n\n**Implementation:**\n1. Add `ColumnInfo` model in `Catalog/ColumnInfo.cs` with `name` (string), `type_name` (string), `comment` (string?), `nullable` (bool?) JSON-deserialized fields.\n2. Extend `TableInfo` model with a `Columns` list property (populated by the detail endpoint, not the list endpoint).\n3. Add `GetTableAsync(string catalogName, string schemaName, string tableName, CancellationToken ct)` method to `UnityCatalogClient` that calls `GET /api/2.1/unity-catalog/tables/{catalog_name}.{schema_name}.{table_name}` and returns a `TableInfo` with columns populated.\n4. In `DatabricksDriver.GetSchemaAndBuildAssembly`, after adding each `tblItem`, call `GetTableAsync` to fetch columns. For each column, add a child `ExplorerItem` with `ExplorerItemKind.FieldOrProperty`, `ExplorerIcon.Blank`, and the column type appended to the name (e.g. `\"id (LONG)\"`). Wrap in try/catch to avoid failing the whole tree if one table detail call fails.\n5. Performance note: fetching columns for every table may be slow on large workspaces. Tolerate this for MVP; a future task can add lazy/on-demand loading.\n\n**Tests:** Add `UnityCatalogClientTests` cases for `GetTableAsync` using the `QueuedFakeHandler` pattern. Verify columns are deserialized and returned correctly. Verify `DatabricksDriver` (or integration smoke) that tblItem children are populated.\n\n**Acceptance criteria:** A table ExplorerItem has child items for each column with name and type. Test for `GetTableAsync` passes with mocked HTTP.",
       "status": "inProgress",
-      "devIterations": 3,
+      "devIterations": 6,
       "createdAt": "2026-05-13T22:21:47.005Z",
-      "updatedAt": "2026-05-13T22:29:28.027Z"
+      "updatedAt": "2026-05-13T22:56:57.349Z"
     },
     {
       "id": 11,
@@ -56,7 +56,7 @@
     }
   ],
   "currentTaskNum": 10,
-  "totalLLMCalls": 50,
+  "totalLLMCalls": 56,
   "maxLLMCalls": 500,
   "nextTask": {
     "taskId": 10,
@@ -65,8 +65,8 @@
   },
   "feedback": {
     "taskId": 10,
-    "content": "Reading the codebase to find UnityCatalogClient, TableInfo, DatabricksDriver, and tests so changes can be made safely. Running parallel searches for relevant symbols and files.\n\n",
-    "updatedAt": "2026-05-13T22:29:28.026Z"
+    "content": "Running a quick repository search to find the driver, client, model, and test files to update so columns can be added to the schema. This locates where to add ColumnInfo, extend TableInfo, add GetTableAsync, and update DatabricksDriver and tests. Running search and file reads now.\n\nReading the relevant source and test files to determine exact edits needed (models, client method, driver schema tree, and tests).\n\nRunning tests and reading ralph/memory.md to verify the implementation and test coverage.\n\nRunning dotnet test to execute the unit test suite and verify GetTableAsync and schema column population.\n\n",
+    "updatedAt": "2026-05-13T22:56:57.347Z"
   },
-  "lastUpdated": "2026-05-13T22:29:28.027Z"
+  "lastUpdated": "2026-05-13T22:56:57.349Z"
 }
