@@ -21,10 +21,11 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 
 ## Gotchas
 
-<!-- Non-obvious issues, environment quirks, or things that caused failures. Example:
-- Windows paths require backslashes in spawn() args
-- npm install must run before tsx can resolve modules
--->
+- On some CI/dev hosts the installed .NET SDK may be a newer major (e.g., 10.x) causing `dotnet new` templates to reject older TFMs like `net8.0-windows`. Creating the csproj manually is a reliable fallback.
+- Building a library targeting `net8.0-windows` can succeed under a .NET 10 SDK if the project does not require Windows-only workloads (WPF/WinForms). However running tests targeting `net8.0` requires the .NET 8 runtime to be installed on the machine (the test host will abort otherwise).
+- Avoid embedding PowerShell commands with escaped double-quotes (e.g., \" ) inside XML attributes — MSBuild/XML parsing fails. Use MSBuild `MakeDir` and `Copy` tasks with `$(LOCALAPPDATA)` and `Condition='$(OS) == "Windows_NT"'` for Windows-only copy steps.
+- Use forward-slash paths (`../src/...`) in `ProjectReference` entries for cross-platform builds.
+
 ## Project State
 
 - As of initial plan pass, the repo is empty (no src/ or tests/ directories, no .csproj/.sln files).

@@ -4,14 +4,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Platforms>x64;x86</Platforms>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <AssemblyName>LinqPad.Databricks.Driver</AssemblyName>
+    <RootNamespace>LinqPad.Databricks.Driver</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LINQPad.Reference">
-      <Version>*</Version>
-    </PackageReference>
+    <PackageReference Include="LINQPad.Reference" Version="1.3.1" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-    <PostBuildEvent>if not exist "$(LOCALAPPDATA)\LINQPad\Drivers\DataContext\NetCore\DatabricksDriver" mkdir "$(LOCALAPPDATA)\LINQPad\Drivers\DataContext\NetCore\DatabricksDriver" &amp;&amp; xcopy /Y /I "$(TargetDir)*" "$(LOCALAPPDATA)\LINQPad\Drivers\DataContext\NetCore\DatabricksDriver\"</PostBuildEvent>
-  </PropertyGroup>
+
+  <Target Name="CopyToLinqPad" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <MakeDir Directories="$(LOCALAPPDATA)\LINQPad\Drivers\DataContext\NetCore\DatabricksDriver" />
+    <Copy SourceFiles="$(TargetDir)*.*" DestinationFolder="$(LOCALAPPDATA)\LINQPad\Drivers\DataContext\NetCore\DatabricksDriver\" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
