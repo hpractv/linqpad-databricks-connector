@@ -105,3 +105,4 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - Implementation detail: column child items use ExplorerItemKind.Property with ExplorerIcon.Blank (ExplorerItemKind.FieldOrProperty was not available in the referenced LINQPad API); this preserves consistent rendering in LINQPad's Schema Explorer.
 - Compatibility note: code uses Enum.TryParse to detect and prefer "FieldOrProperty" when present, falling back to "Property" to support older LINQPad.Reference versions.
 - Added ColumnInfo model (ColumnInfo.cs) with properties Name/TypeName/Comment/Nullable/Position; UnityCatalogClient.GetTableAsync returns TableInfo.Columns and DatabricksDriver populates ExplorerItem children (columns shown as 'name (TYPE)').
+- Verified unit tests for GetTableAsync and schema explorer: all tests pass (38 total).
