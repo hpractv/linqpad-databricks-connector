@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace LinqPad.Databricks.Driver.Catalog
@@ -18,5 +19,9 @@ namespace LinqPad.Databricks.Driver.Catalog
 
         [JsonPropertyName("comment")]
         public string? Comment { get; set; }
+
+        // Populated by GetTableAsync (detail endpoint); empty from list endpoint.
+        [JsonPropertyName("columns")]
+        public List<ColumnInfo> Columns { get; set; } = new();
     }
 }

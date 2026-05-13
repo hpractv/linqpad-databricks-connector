@@ -44,6 +44,15 @@ namespace LinqPad.Databricks.Driver.Ado
             _state = ConnectionState.Open;
         }
 
+        /// <summary>
+        /// Test-only: inject a pre-built execution client (avoids real HTTP in unit tests).
+        /// </summary>
+        internal void InjectExecutionClientForTest(StatementExecutionClient client)
+        {
+            ExecutionClient = client ?? throw new ArgumentNullException(nameof(client));
+            _state = ConnectionState.Open;
+        }
+
         public override void Close()
         {
             _state = ConnectionState.Closed;

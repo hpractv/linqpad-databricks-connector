@@ -109,6 +109,21 @@ namespace LinqPad.Databricks.Driver.Catalog
             return results;
         }
 
+        public async Task<TableInfo?> GetTableAsync(string catalogName, string schemaName, string tableName, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(catalogName))
+                throw new ArgumentException("catalogName is required", nameof(catalogName));
+            if (string.IsNullOrWhiteSpace(schemaName))
+                throw new ArgumentException("schemaName is required", nameof(schemaName));
+            if (string.IsNullOrWhiteSpace(tableName))
+                throw new ArgumentException("tableName is required", nameof(tableName));
+
+            // UC full name format: catalog.schema.table
+            var fullName = $"{Uri.EscapeDataString(catalogName)}.{Uri.EscapeDataString(schemaName)}.{Uri.EscapeDataString(tableName)}";
+            return await _http.GetAsync<TableInfo>(
+                $"/api/2.1/unity-catalog/tables/{fullName}", ct).ConfigureAwait(false);
+        }
+
         private static string BuildPath(string basePath, string? pageToken)
         {
             if (string.IsNullOrEmpty(pageToken))

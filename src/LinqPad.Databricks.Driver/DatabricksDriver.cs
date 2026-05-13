@@ -337,12 +337,40 @@ namespace LinqPad.Databricks.Driver
                                     foreach (var tbl in tables.OrderBy(t => t.Name))
                                     {
                                         bool isView = tbl.TableType is "VIEW" or "MATERIALIZED_VIEW";
-                                        var icon = isView ? ExplorerIcon.TableFunction : ExplorerIcon.Blank;
+                                        var icon = isView ? ExplorerIcon.View : ExplorerIcon.Table;
                                         var tblItem = new ExplorerItem(tbl.Name, ExplorerItemKind.QueryableObject, icon)
                                         {
                                             IsEnumerable = true,
-                                            DragText = $"`{cat.Name}`.`{schema.Name}`.`{tbl.Name}`"
+                                            DragText = $"`{cat.Name}`.`{schema.Name}`.`{tbl.Name}`",
+                                            Children = new List<ExplorerItem>()
                                         };
+
+                                        // Fetch column details for this table
+                                        try
+                                        {
+                                            var detail = uc.GetTableAsync(cat.Name, schema.Name, tbl.Name).GetAwaiter().GetResult();
+                                            if (detail?.Columns is { Count: > 0 })
+                                            {
+                                                foreach (var col in detail.Columns.OrderBy(c => c.Position))
+                                                {
+                                                    var colLabel = string.IsNullOrEmpty(col.TypeName)
+                                                        ? col.Name
+                                                        : $"{col.Name} ({col.TypeName})";
+                                                    tblItem.Children.Add(new ExplorerItem(
+                                                        colLabel,
+                                                        ExplorerItemKind.Property,
+                                                        ExplorerIcon.Blank)
+                                                    {
+                                                        ToolTipText = col.Comment
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        catch
+                                        {
+                                            // Column detail fetch is best-effort; skip silently to keep tree usable
+                                        }
+
                                         schemaItem.Children.Add(tblItem);
                                     }
                                 }
@@ -445,6 +473,11 @@ namespace {ns}
             conn.Open();
             return conn;
         }
+
+        // Return null so LINQPad uses its own timeout-based cache strategy.
+        // Databricks REST APIs do not expose a catalog-level DDL timestamp,
+        // so we cannot cheaply detect schema changes between sessions.
+        public override DateTime? GetLastSchemaUpdate(IConnectionInfo cxInfo) => null;
     }
 }
 

@@ -187,5 +187,79 @@ namespace LinqPad.Databricks.Tests
 
             Assert.Equal(2, results.Count);
         }
+
+        // ── GetTableAsync ──────────────────────────────────────────────────────
+
+        [Fact]
+        public async Task GetTableAsync_ReturnsTableWithColumns()
+        {
+            var json = """
+                {
+                  "name": "orders",
+                  "schema_name": "sales",
+                  "catalog_name": "main",
+                  "table_type": "MANAGED",
+                  "columns": [
+                    {"name": "id",     "type_name": "LONG",   "position": 0, "nullable": false},
+                    {"name": "amount", "type_name": "DOUBLE", "position": 1, "nullable": true},
+                    {"name": "note",   "type_name": "STRING", "position": 2, "nullable": true}
+                  ]
+                }
+                """;
+            var (http, handler) = BuildClient((HttpStatusCode.OK, json));
+            var client = new UnityCatalogClient(http);
+
+            var table = await client.GetTableAsync("main", "sales", "orders");
+
+            Assert.NotNull(table);
+            Assert.Equal("orders", table!.Name);
+            Assert.Equal(3, table.Columns.Count);
+            Assert.Equal("id",     table.Columns[0].Name);
+            Assert.Equal("LONG",   table.Columns[0].TypeName);
+            Assert.False(table.Columns[0].Nullable);
+            Assert.Equal("amount", table.Columns[1].Name);
+            Assert.Equal("DOUBLE", table.Columns[1].TypeName);
+            Assert.True(table.Columns[1].Nullable);
+
+            // Verify the request URL contains the full name
+            Assert.Single(handler.CapturedUrls);
+            Assert.Contains("main.sales.orders", handler.CapturedUrls[0]);
+        }
+
+        [Fact]
+        public async Task GetTableAsync_SpecialCharactersInNames_AreUriEncoded()
+        {
+            var json = """{"name":"my table","schema_name":"s","catalog_name":"c","table_type":"MANAGED","columns":[]}""";
+            var (http, handler) = BuildClient((HttpStatusCode.OK, json));
+            var client = new UnityCatalogClient(http);
+
+            await client.GetTableAsync("my cat", "my schema", "my table");
+
+            Assert.Single(handler.CapturedUrls);
+            // spaces should be encoded
+            Assert.DoesNotContain(" ", handler.CapturedUrls[0]);
+        }
+
+        [Fact]
+        public async Task GetTableAsync_EmptyColumns_ReturnsEmptyList()
+        {
+            var json = """{"name":"t","schema_name":"s","catalog_name":"c","table_type":"VIEW","columns":[]}""";
+            var (http, _) = BuildClient((HttpStatusCode.OK, json));
+            var client = new UnityCatalogClient(http);
+
+            var table = await client.GetTableAsync("c", "s", "t");
+
+            Assert.NotNull(table);
+            Assert.Empty(table!.Columns);
+        }
+
+        [Fact]
+        public async Task GetTableAsync_NullCatalogName_Throws()
+        {
+            var (http, _) = BuildClient();
+            var client = new UnityCatalogClient(http);
+            await Assert.ThrowsAsync<ArgumentException>(
+                () => client.GetTableAsync("", "s", "t"));
+        }
     }
 }
