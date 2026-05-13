@@ -26,7 +26,19 @@ dotnet publish "$ROOT/src/LinqPad.Databricks.Driver/LinqPad.Databricks.Driver.cs
 # Create .LPX6 (zip renamed)
 LPX6="$DIST/LinqPad.Databricks.Driver.$VERSION.LPX6"
 rm -f "$LPX6"
-(cd "$PUBLISH_DIR" && zip -r "$LPX6" .)
+if command -v zip &>/dev/null; then
+    (cd "$PUBLISH_DIR" && zip -r "$LPX6" .)
+else
+    python3 -c "
+import zipfile, os, sys
+pub = sys.argv[1]; out = sys.argv[2]
+with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
+    for root, dirs, files in os.walk(pub):
+        for f in files:
+            fp = os.path.join(root, f)
+            z.write(fp, os.path.relpath(fp, pub))
+" "$PUBLISH_DIR" "$LPX6"
+fi
 echo "Created: $LPX6"
 
 # Build NuGet package

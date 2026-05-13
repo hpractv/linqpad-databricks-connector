@@ -6,9 +6,21 @@
     <Platforms>x64;x86</Platforms>
     <AssemblyName>LinqPad.Databricks.Driver</AssemblyName>
     <RootNamespace>LinqPad.Databricks.Driver</RootNamespace>
+    <!-- NuGet package metadata -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>LinqPad.Databricks.Driver</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>hpractv</Authors>
+    <Description>Azure Databricks Data Context Driver for LINQPad 8+. Connects via Unity Catalog REST API and SQL Statement Execution API.</Description>
+    <PackageTags>linqpaddriver databricks azure unity-catalog</PackageTags>
+    <RepositoryUrl>https://github.com/hpractv/linqpad-databricks-connector</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LINQPad.Reference" Version="1.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <Target Name="CopyToLinqPad" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
