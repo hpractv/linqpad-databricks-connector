@@ -93,3 +93,6 @@ Keep entries concise and non-obvious. Remove entries that are no longer relevant
 - `AssemblyName.CodeBase` is obsolete in .NET 10; use `Path.ChangeExtension(assemblyToBuild.Name, ".dll")` as OutputPath for CompileSource.
 - ADO facade: DatabricksConnection stores StatementExecutionClient created in Open(); DatabricksCommand calls ExecuteAsync().GetAwaiter().GetResult() and wraps DataTable in CreateDataReader().
 - DbParameter/DbCommand abstract overrides emit CS8765 nullability warnings; suppress with #pragma disable CS8765 on the affected setters.
+
+- UnityCatalogClient implemented at src/LinqPad.Databricks.Driver/Catalog/UnityCatalogClient.cs; provides ListCatalogsAsync, ListSchemasAsync, and ListTablesAsync with correct pagination and query parameters. Unit tests under tests/LinqPad.Databricks.Tests/UnityCatalogClientTests.cs pass locally.
+- UnityCatalogClient uses endpoint-specific response wrappers ("catalogs", "schemas", "tables") because the API does not use a generic "items" envelope; query params are URI-encoded and page_token is appended correctly.
