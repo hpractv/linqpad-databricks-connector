@@ -48,5 +48,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "Artifacts in $dist:" -ForegroundColor Green
+Write-Host "Artifacts in ${dist}:" -ForegroundColor Green
 Get-ChildItem $dist | Select-Object Name, Length | Format-Table
